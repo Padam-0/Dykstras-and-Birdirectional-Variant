@@ -1,0 +1,73 @@
+---
+title: "MIS40550 - Network Software Modelling Assignment 1"
+author: "Peter Adam - 16201859"
+output:
+  html_document: default
+  pdf_document: default
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+  library(knitr)
+```
+
+See attached dijkstra.py for implementation of Dijkstra's algorithm and bidirectional variant.
+
+#### Question 1. Describe Dijkstra's algorithm for solving the shortest path problem.
+
+Dijkstra's algorithm is a method for solving the Shortest Problem in $O(n^2)$ time. It does this by building a neighbourhood of all nodes that connect to the base node, and evaluating the distance to each of these. It picks the minimum one, and adds that node to the 'base tree'. A neighbourhood of all nodes connected to the 'base tree' is generated, and the node with the shortest path from this tree added to the tree and so on.
+
+Because at each stage, only nodes that are 1 step away from the current tree are considered, the edge with the shortest distance from the tree is the shortest path from the tree to the node it connects to. As the tree is a Shortest Path Spanning Tree, this path is also the shortest path to the source node. As the tree expands and the destination node is reached, this logic shows that the path between the source and the destination is a Shortest Path.
+
+Time complexity can be modelled on the number of potential operations. At each of the $n$ nodes, the algorithm may have to search through edges to all other $n$ nodes to find the shortest path, and as such the complexity is $O(n^2)$
+
+This is the worst case scenario, but in practice it is often the case that most nodes aren't seen. Another way to discuss the time complexity is in terms of a branching factor $b$, or a measure of how many edges leave each node. The higher this number, the more edges that need to be searched by the algorithm at each of the $d$ nodes that need to be searched (distance from source to destination). As such, the time complexity can also be represented as $O(b^d)$.
+
+#### Question 2. Describe the bidirectional Dijkstra algorithm.
+
+The bidirectional algorithm does two simultanious searches, forward from the source node and backwards from the target node and stops when the two searches meet. Nodes are given two labels in place of the original $D$ label, $d_f$ for the forward search and $d_r$ for the reverse search.
+
+Intuitively, this method is like increasing the radius of two circles around the source and destination nodes and stopping when the circles touch.
+
+The stopping condition is more complicated than the single directional variant, as scanning a node once in each direction doesn't mean that it is on the shortest path. The algorithm stops if a node is appended to both the shortest path spanning tree originating at the source and the destination. The first node to appear on both trees has a found shortest path to the source and destination, and hence exists on shortest path between the source and destination.
+
+Assumptions: Edge weights are non-negative and don't change.
+
+#### Question 3. With the aid of a diagram, explain how it differs from Dijkstra's original algorithm.
+```{r fig.width=3, fig.height=2.5,echo=FALSE}
+library(png)
+library(grid)
+img1 <- as.raster(readPNG("dij.png"))
+grid.raster(img1)
+```
+```{r fig.width=3, fig.height=2.5,echo=FALSE}
+img2 <- as.raster(readPNG("bidi.png"))
+grid.raster(img2)
+```
+
+The diagram on the left shows Dijkstra's algorithm searching for the shortest path from the source to the destination. The arrows represent nodes accepted into the Shortest Path Spanning Tree $P$, and the blue numbers represent the step number. The shortest path is found after the 5th step.
+
+The diagram on the right shows the bidirectional variant, with the blue arrows showing the forward search, and the green arrows showing the reverse search. Node $C$ is accepted into the Forward Shortest Path Spanning Tree on the 2nd step, and into the Reverse Shortest Path Spanning Tree on the 3rd step, and the shortest path found.
+
+#### Question 4. State its time complexity and explain why it is more efficient.
+
+Both the forward and reverse algorithms are searching for a node that will link the two searched to create the shortest path. This node is effectively half-way between the source and destination, so the distance of each algorithms search is $d/2$. As the branching factor is constant, the complexity of each search is $O(b^{d/2})$ which is significantly less than dijkstra's method.
+
+#### Question 6. Test the run-time behaviour of both algorithms on randomly generated graphs of varying sizes.
+
+Both algorithms were run on identical randomly generated undirected graphs, as produced by `rand_pos_graph()`, with a specified number of nodes and an edge density (number of edges / number of potential edges) over 5 runs. Results are specified below.
+
+```{r}
+data = list(c(1000,2000,3000,3000,3000), c(0.05,0.05,0.01,0.05,0.1), c(0.47,0.32,5.15,62.13,126.59), c(0.08,0.16,0.06,3.08,5.12), c(0.06,0.04,0.12,0.52,1.10))
+results <- as.data.frame(data)
+names(results) <- c("Nodes", "Edge Density", "Dijkstra's Algorithm Time (s)", "Bidirectional Time (s)", "NetworkX Implementation Time (s)")
+kable(results)
+```
+
+#### Question 7. Briefly state your conclusion concerning run-time behaviour.
+
+Based on the results in the table above, it is clear that the operating time for the bidirectional algorithm is superior faster for all randomly generated graphs. In small cases (100 node graphs with 20% density) the bidirectional algorithm finds the shortest path twice as quickly, and in larger cases (300 node graphs with 20% density) over 3 times as quickly.
